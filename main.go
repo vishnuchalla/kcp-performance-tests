@@ -83,7 +83,7 @@ func setupSyncer(kcpPath string, orgName string, wsName string, syncerImage stri
 	fmt.Printf("Swithching to the workspace: %v\n", currentWs)
 	cmd := exec.Command(kcpPath+"/bin/kubectl-kcp", "ws", "use", currentWs)
 	execCommand(cmd)
-	syncerCmd := exec.Command(kcpPath+"/bin/kubectl-kcp", "workload", "sync", wsName, "--syncer-image", syncerImage, "--output-file", wsName+"-syncer.yaml")
+	syncerCmd := exec.Command(kcpPath+"/bin/kubectl-kcp", "workload", "sync", wsName, "--resources=pods", "--syncer-image", syncerImage, "--output-file", wsName+"-syncer.yaml")
 	execCommand(syncerCmd)
 	deploySyncer := exec.Command("kubectl", "--kubeconfig", wsName+"-kubeconfig", "apply", "-f", wsName+"-syncer.yaml")
 	execCommand(deploySyncer)
@@ -99,11 +99,26 @@ func main() {
 	// 	cmd := exec.Command("rm", "-rf", kcpPath+"/.kcp")
 	// 	execCommand(cmd)
 	// }()
-	numberOfClusters := 2
-	clusterPrefix := "kcp-test"
-	orgName := "perf-scale-test"
-	kcpPath := "/Users/vishnuchalla/kcp"
-	syncerImage := "ghcr.io/kcp-dev/kcp/syncer:v0.11.0"
+	numberOfClusters, _ := strconv.Atoi(os.Getenv("NUMBER_OF_CLUSTERS"))
+	if numberOfClusters == 0 {
+		numberOfClusters = 2
+	}
+	clusterPrefix := os.Getenv("CLUSTER_PREFIX")
+	if clusterPrefix == "" {
+		clusterPrefix = "kcp-test"
+	}
+	orgName := os.Getenv("ORG_NAME")
+	if orgName == "" {
+		orgName = "perf-scale-test"
+	}
+	kcpPath := os.Getenv("KCP_PATH")
+	if kcpPath == "" {
+		kcpPath = "/Users/vishnuchalla/kcp"
+	}
+	syncerImage := os.Getenv("SYNCER_IMAGE")
+	if syncerImage == "" {
+		syncerImage = "ghcr.io/kcp-dev/kcp/syncer:v0.11.0"
+	}
 	// var wg sync.WaitGroup
 	// wg.Add(numberOfClusters)
 	initializeKcp(kcpPath)
